@@ -1,15 +1,13 @@
-> [!TIP]
-> Use `Google Translate` to read this file in your native language.
+> Translate this file into your native language using `Google Translate` or a [similar service](https://immersivetranslate.com).
 
 # CSSVarHighlight
 
-Este plugin para **Neovim** es una herramienta útil que te ayudará a identificar fácilmente los colores definidos en variables CSS en tus archivos de estilo, como `main.css` o `style.css`. Cuando el plugin detecta un color en una variable CSS en estos archivos, resalta su aparición, lo que facilita su visualización desde cualquier otro archivo.
+Este plugin para **Neovim** es una herramienta que te ayudará a identificar los colores definidos en las variables CSS de tus archivos de estilo. El plugin analizará una hoja de estilo específica, como `main.css` o `style.css`, que debe contener todas las variables CSS necesarias. Cuando el plugin detecta un color en una variable CSS, resalta su aparición, lo que facilita su visualización desde otros archivos.
 
-## Requerimientos
+## 🗒️ Requerimientos
 
 * [`Neovim`](https://github.com/neovim/neovim): Versión 0.7 o superior.
 * [`Mini.hipatterns`](https://github.com/echasnovski/mini.hipatterns): El resaltador de colores.
-* [`CSSPluginHelpers`](https://github.com/farias-hecdin/CSSPluginHelpers): Funciones esenciales para el plugin.
 
 ### Instalación
 
@@ -19,10 +17,7 @@ Usando [`folke/lazy.nvim`](https://github.com/folke/lazy.nvim):
 {
     'farias-hecdin/CSSVarHighlight',
     ft = "css",
-    dependencies = {
-        "echasnovski/mini.hipatterns",
-        "farias-hecdin/CSSPluginHelpers",
-    },
+    dependencies = {"echasnovski/mini.hipatterns"},
     config = true,
     -- If you want to configure some options, replace the previous line with:
     -- config = function()
@@ -34,18 +29,17 @@ Posteriormente, en la configuración del plugin `mini.hipatterns`:
 
 ```lua
 local hipatterns = require("mini.hipatterns")
-local CSSVarHighlight = require("CSSVarHighlight")
 
 hipatterns.setup({
     -- Your other settings...
     highlighters = {
-        css_variables = CSSVarHighlight.get_settings()
         -- Your other settings...
+        css_variables = require("CSSVarHighlight").get_settings()
     }
 })
 ```
 
-## Configuración
+## 🗒️ Configuración
 
 Estas son las opciones de configuración predeterminadas:
 
@@ -68,20 +62,40 @@ require('CSSVarHighlight').setup({
 
 | Comandos           | Atajos de teclado | Descripción                         |
 | -------------------|------------------ | ----------------------------------- |
-| `CSSVarHighlight`  | `<leader>ch`      | Activa el plugin y actualiza el resaltado de colores |
+| `CSSVarHighlight`  | `<leader>ch`      | Activa el plugin y/o actualiza el resaltado de colores |
 
-Puedes ampliar la búsqueda de archivos hacia arriba o seleccionar otro archivo utilizando el comando `:CSSVarHighlight`.
+> Si deseas desactivar los atajos de teclado predeterminados, puedes establecer la opción  `disable_keymaps` en `true`.
 
-* Para buscar hacia arriba, utiliza la sintaxis `:CSSVarHighlight <number> <string>`, donde `<number>` es el número de niveles que deseas buscar hacia arriba y `<string>` es el nombre del archivo. El plugin analizará cada nivel hasta encontrar el archivo deseado.
+Puedes ampliar la búsqueda de archivos hacia un directorio específico o analizar otro archivo utilizando el comando `:CSSVarHighlight`.
 
-* Para buscar hacia abajo o en un directorio específico, utiliza la sintaxis `:CSSVarHighlight <string> <string>`, donde el primer `<string>` es el nombre del archivo y el segundo `<string>` es la ruta del directorio donde deseas buscar. Por ejemplo:
+<details>
+<summary>Más información:</summary>
 
+* Para buscar hacia arriba, utiliza la sintaxis `:CSSVarHighlight <filename> <attempt_limit>`, donde `<attempt_limit>` es el número de niveles que deseas buscar hacia arriba, comenzando desde el directorio actual, y `<filename>` es el nombre del archivo (sin incluir la extensión `*.css`). El plugin analizará cada nivel hasta encontrar el archivo deseado. Por ejemplo:
+
+```sh
+#-- Good
+:CSSVarHighlight my_stylesheet 9
+
+#-- Bad
+:CSSVarHighlight my_stylesheet.css 9
+:CSSVarHighlight "my_stylesheet.css" 9
 ```
-:CSSVarHighlight filename file/path/to/search
+
+* Para buscar en un directorio específico, utiliza la sintaxis `:CSSVarHighlight <filename> <path>`, donde `<path>` es la ruta del directorio en el que deseas realizar la búsqueda. Por ejemplo:
+
+```sh
+#-- Good
+:CSSVarHighlight my_Stylesheet file/path/to/search
+:CSSVarHighlight my_Stylesheet ../../file/path/to/search
+
+#-- Bad
+:CSSVarHighlight "my_Stylesheet" "file/path/to/search"
+:CSSVarHighlight "my_Stylesheet" "file/path/to/search.css"
 ```
 
-Si deseas desactivar los atajos de teclado predeterminados, puedes establecer la opción  `disable_keymaps` en `true`
+</details>
 
-## Licencia
+## 🛡️ Licencia
 
 CSSVarHighlight está bajo la licencia MIT. Consulta el archivo `LICENSE` para obtener más información.
