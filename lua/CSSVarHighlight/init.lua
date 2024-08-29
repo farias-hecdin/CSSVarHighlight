@@ -5,8 +5,8 @@ local cvr = require('CSSVarHighlight.convert_color')
 local gdt = require('CSSVarHighlight.get_data')
 
 local g_colorsFromFile = {}
-local g_loadLastFile = nil
-local g_isPluginInitialized = false
+local g_lastFile, g_lastDir = nil, nil
+local g_isPluginInitialized, g_showLog = false, true
 
 M.setup = function(options)
   -- Merge the user-provided options with the default options
@@ -27,8 +27,8 @@ end
 -- Analyze the arguments provided
 local function parse_args(args)
   local attempt_limit = tonumber(cfg.options.parent_search_limit)
-  local fname = g_loadLastFile or cfg.options.filename_to_track
-  local fdir = nil
+  local fname = g_lastFile or cfg.options.filename_to_track
+  local fdir = g_lastDir or nil
 
   local num_args = #args.fargs
 
@@ -56,36 +56,28 @@ end
 --- Create a user command
 vim.api.nvim_create_user_command("CSSVarHighlight", function(args)
   local attempt_limit, fname, fdir = parse_args(args)
-  g_loadLastFile = fname
-  g_isPluginInitialized = true
+  g_lastFile, g_lastDir = fname, fdir
+  if g_loadLastFile ~= fname then
+    g_showLog = true
+  end
+
   M.get_colors_from_file(attempt_limit, fname .. ".css", fdir)
+
+  -- Event to auto-reload the data
+  if g_isPluginInitialized then
+    vim.api.nvim_create_autocmd({"BufWritePost"}, {
+      pattern = "*.css",
+      callback = function()
+        vim.cmd('CSSVarHighlight')
+      end,
+    })
+  end
+
+  g_isPluginInitialized = true
 end, {desc = "Track the colors of the CSS variables", nargs = "*"})
 
---- Retrieves color values from a file and updates the mini.hipatterns plugin
-M.get_colors_from_file = function(attempt_limit, fname, fdir)
-  -- Search for the file with the given parameters.
-  local fpath = fos.find_file(fname, fdir, 1, attempt_limit)
-  if not fpath then
-    vim.print("[CSSVarHighlight] Attempt limit reached. Operation cancelled.")
-    return
-  end
-  -- Extract colors from the found file.
-  local data = gdt.get_css_attribute(fpath, cfg.options.variable_pattern)
-  g_colorsFromFile = M.convert_color(data)
-  -- Try to load the 'mini.hipatterns' plugin.
-  local plugin_ok, plugin = pcall(require, "mini.hipatterns")
-  if not plugin_ok then
-    vim.print("[CSSVarHighlight] The 'mini.hipatterns' plugin was not found.")
-    return
-  end
-  if plugin then
-    vim.cmd('lua MiniHipatterns.update()')
-    vim.print("[CSSVarHighlight] The data has been updated. " .. os.date("%H:%M:%S"))
-  end
-end
-
 --- Converts color values in various formats to hex color
-M.convert_color = function(data)
+local convert_color = function(data)
   local colors = {}
 
   for name, value in pairs(data) do
@@ -103,6 +95,32 @@ M.convert_color = function(data)
     end
   end
   return colors
+end
+
+--- Retrieves color values from a file and updates the mini.hipatterns plugin
+M.get_colors_from_file = function(attempt_limit, fname, fdir)
+  -- Search for the file with the given parameters.
+  local fpath = fos.find_file(fname, fdir, 1, attempt_limit)
+  if not fpath then
+    vim.print("[CSSVarHighlight] Attempt limit reached. Operation cancelled.")
+    return
+  end
+  -- Extract colors from the found file.
+  local data = gdt.get_css_attribute(fpath, cfg.options.variable_pattern)
+  g_colorsFromFile = convert_color(data)
+  -- Try to load the 'mini.hipatterns' plugin.
+  local plugin_ok, plugin = pcall(require, "mini.hipatterns")
+  if not plugin_ok then
+    vim.print("[CSSVarHighlight] The 'mini.hipatterns' plugin was not found.")
+    return
+  end
+  if plugin then
+    vim.cmd('lua MiniHipatterns.update()')
+    if g_showLog then
+      vim.print("[CSSVarHighlight] The data has been updated. " .. os.date("%H:%M:%S"))
+      g_showLog = false
+    end
+  end
 end
 
 --- Retrieves the settings for the mini.hipatterns plugin
