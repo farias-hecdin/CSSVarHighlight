@@ -1,7 +1,7 @@
 local M = {}
 
 --- Rgb to Hex color ----------------------------------------------------------
-M.rgbToHex = function(r, g, b)
+local rgbToHex = function(r, g, b)
   local function toHex(num)
     return string.format("%02x", num)
   end
@@ -18,7 +18,7 @@ local function adjustColor(color)
   end
 end
 
-M.lchToHex = function(l, c, h)
+local lchToHex = function(l, c, h)
   local a = math.floor(c * math.cos(math.rad(h)) + 0.5)
   local b = math.floor(c * math.sin(math.rad(h)) + 0.5)
 
@@ -68,9 +68,30 @@ local function hslToRgb(h, s, l)
   return hue2rgb(p, q, h + 0.33333333), hue2rgb(p, q, h), hue2rgb(p, q, h - 0.33333333)
 end
 
-M.hslToHex = function(h, s, l)
+local hslToHex = function(h, s, l)
   local r, g, b = hslToRgb(h * 0.002777778, s * 0.01, l * 0.01)
   return string.format("#%02x%02x%02x", r * 255, g * 255, b * 255)
+end
+
+--- Converts color values in various formats to hex color ---------------------
+M.convert_color = function(data)
+  local colors = {}
+
+  for name, value in pairs(data) do
+    if string.match(value, "%#%w%w%w%w%w%w") then
+      colors[name] = value
+    elseif string.match(value, "lch%(.+%)") then
+      local x, y, z = string.match(value, "lch%((%d+%.?%d+)%p? (%d+%.?%d+) (%d+%.?%d+)%)")
+      colors[name] = lchToHex(x, y, z)
+    elseif string.match(value, "hsl%(.+%)") then
+      local x, y, z = string.match(value, "hsl%((%d+)%a*, (%d+)%p?, (%d+)%p?%)")
+      colors[name] = hslToHex(x, y, z)
+    elseif string.match(value, "rgb%(.+%)") then
+      local x, y, z = string.match(value, "rgb%((%d+), (%d+), (%d+)%)")
+      colors[name] = rgbToHex(x, y, z)
+    end
+  end
+  return colors
 end
 
 return M
