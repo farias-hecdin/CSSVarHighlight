@@ -59,7 +59,9 @@ require('CSSVarHighlight').setup({
 | -------------------|------------------ | ----------------------------------- |
 | `CSSVarHighlight`  | `<leader>ch`      | Activa el plugin y/o actualiza el resaltado de colores |
 
-> Si deseas desactivar los atajos de teclado predeterminados, puedes establecer la opción  `disable_keymaps` en `true`.
+>[!NOTE]
+> * Para actualizar los datos, debes guardar el archivo que contiene tus variables CSS.
+> * Si deseas desactivar los atajos de teclado predeterminados, puedes establecer la opción  `disable_keymaps` en `true`.
 
 Puedes ampliar la búsqueda de archivos hacia un directorio específico o analizar otro archivo utilizando el comando `:CSSVarHighlight`.
 
